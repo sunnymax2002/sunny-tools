@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import logging
 import datetime
-import numpy as np
 
 import context
 
-from utils.io import get_xls_data, ReadConfig
+from utils.io import ReadConfig
+from screener import *
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,12 +26,9 @@ data_dir = Path(config['data_dir'], DATA_DIR_NAME)
 out_dir = Path(config['data_dir'], OUTPUT_DIR_NAME)
 
 companies = None
-# companies = ['Mold-Tek Pack']
+# companies = ['Tanla Platforms']
 # companies = ['Angel One', 'Avenue Super', 'Hind. Unilever', 'Asian Paints', 'Tanla Platforms',
             #  'C D S L', 'L&T Technology', 'Larsen & Toubro', 'Rategain Travel', 'TCS', 'Polycab India', 'Titan Company']
-
-
-# dir_name = r'C:\Users\sunnygup\OneDrive - Intel Corporation\Documents\Personal\Business Analysis'
 
 # Those which could not be processed
 not_processed = []
@@ -47,63 +44,10 @@ for company_name, fpath in data_files.items():
     if fpath is None:
         fpath = Path(data_dir, f'{company_name}.xlsx')
 
-    srow = 3
-    erow = 19
-    sheet_name = 'Profit & Loss'
-    pnl = get_xls_data(fpath, srow, erow, sheet_name)
-    pnl.drop(['Trailing', 'Best Case', 'Worst Case'], axis=1, inplace=True)
-    # pnl.info()
-    logging.debug(pnl)
-
-    srow = 3
-    erow = 24
-    sheet_name = 'Balance Sheet'
-    bs = get_xls_data(fpath, srow, erow, sheet_name)
-    # bs.info()
-    logging.debug(bs)
-
-    srow = 3
-    erow = 7
-    sheet_name = 'Cash Flow'
-    cf = get_xls_data(fpath, srow, erow, sheet_name)
-    # cf.info()
-    logging.debug(cf)
-
-    data = pd.concat([pnl, bs, cf]).transpose()
-    logging.debug(data)
-    # data.info()
-
-    # Check if null values read
-    non_null = np.any(data.count(axis=1))
-    if not non_null:
-        logging.error('All values read as null, open and save XLSX and try again')
+    data = read_screener_xls(fpath)
+    if data is None:
         not_processed.append(company_name)
         continue
-
-    SALES = 'Sales'
-    SALES_GR = 'Sales Growth Rate'
-    OPM = 'OPM'
-    ROCE = 'Return on Capital Emp'
-    FCFF = 'Free Cash Flow to Firm (FCFF)'
-    FM = 'FCFF as % of Sales'
-    INV2CE = 'Investments as % of CE'
-    INC_CE = 'Incremental Capital Employed (CE) as % of Total CE'
-
-    CFO = 'Cash from Operating Activity'
-    FIXED_ASSETS = 'Net Block'
-    OTHER_ASSETS = 'Other Assets'
-    OTHER_LIABILITIES = 'Other Liabilities'
-    INVESTMENTS = 'Investments'
-    EQUITY = 'Equity Share Capital'
-    RESERVES = 'Reserves'
-    DEBT = 'Borrowings'
-    TAX = 'Tax'
-
-    IDX_TYPE = 'idx_type'
-
-    # calc_df[BusiData.OWNER_EARNINGS.value] = df[BusiData.CFO.value] - calc_df[BusiData.REINVESTMENT.value]
-    # calc_df[BusiData.REINVESTMENT.value] = df[BusiData.FIXED_ASSETS.value].diff() + calc_df[BusiData.WORKING_CAPITAL.value].diff()
-    # calc_df[BusiData.WORKING_CAPITAL.value] = df[BusiData.OTHER_ASSETS.value] - df[BusiData.OTHER_LIABILITIES.value]
 
     data[INC_CE] = (data[FIXED_ASSETS].diff() + (data[OTHER_ASSETS] - data[OTHER_LIABILITIES]).diff()) / (data[FIXED_ASSETS] + (data[OTHER_ASSETS] - data[OTHER_LIABILITIES]))
     data[FCFF] = data[CFO] - data[INC_CE] - data[TAX]
@@ -125,8 +69,6 @@ for company_name, fpath in data_files.items():
     # Turns off interactive plotting
     plt.ioff()
 
-    # ax = result.plot(kind='bar', title=company_name)
-
     # Melt for seaborn
     df_melted = pd.melt(result.reset_index(), id_vars='index', value_vars=useful_cols)
 
@@ -140,7 +82,6 @@ for company_name, fpath in data_files.items():
     plt.grid()
 
     # Save to file
-    # TODO: figure not saved properly
     # fig = ax.get_figure()
     fig.tight_layout()
     fig.savefig(Path(out_dir, f'{company_name}.png'), dpi=600) 
