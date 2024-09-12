@@ -1,0 +1,13 @@
+{
+	"tags": [
+		{"label": "A"},
+		{"label": "B", "parent": "A"},
+		{"label": "C"},
+		{"label": "D", "parent": "B"}
+	],
+	"informations": [
+		{"id": "1", "title": "Q1", "tags": ["B", "C"], "type": "question"},
+		{"id": "2", "title": "A2", "type": "answer"},
+		{"id": "2", "title": "Q2", "tags": ["B", "C"], "type": "question"}
+	]
+}
