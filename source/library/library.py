@@ -1,17 +1,38 @@
-from models import *
+# from models import *
 
 import os
 import json
 import pandas as pd
 
-script_filepath = os.path.abspath(__file__)
+class InfoLib:
+	LBL_TAG = 'tags'
+	LBL_INFORMATION = 'informations'
+	LBL_GRP = 'group'
 
-with open(r'C:\Users\sunnygup\OneDrive - Intel Corporation\Documents\Personal\personal_code\my_library\data.json') as fh:
-	data = json.load(fh)
+	def __init__(self) -> None:
+		self.info_df = None
 
+	def load(self, json_path, grp_name, merge=True):
+		with open(json_path) as fh:
+			data = json.load(fh)
 
+			if self.LBL_INFORMATION in data:
+				info = pd.DataFrame(data[self.LBL_INFORMATION])
+				info[self.LBL_GRP] = grp_name
 
-if 'tags' in data:
-	tag_data = pd.DataFrame([Tag.model_validate(d).getHierName() for d in data['tags']])
+				if merge and (self.info_df is not None):
+					self.info_df = pd.concat([self.info_df, info])
+				else:
+					self.info_df = info
 
-print(data)
+fq = r'D:\Code\git_repos\sunny-data\finance\investing\checklist.json'
+fa = r'D:\Code\git_repos\sunny-data\finance\investing\analysis\kpit.json'
+
+lib = InfoLib()
+lib.load(fq, 'checklist')
+
+lib.load(fa, 'KPITTECH.NS')
+
+print(lib.info_df)
+
+print('done')
