@@ -1,6 +1,5 @@
 # from models import *
 
-import os
 import json
 import pandas as pd
 
@@ -8,6 +7,9 @@ class InfoLib:
 	LBL_TAG = 'tags'
 	LBL_INFORMATION = 'informations'
 	LBL_GRP = 'group'
+	LBL_TYPE = 'type'
+	LBL_TITLE = 'title'
+	LBL_DESC = 'description'
 
 	def __init__(self) -> None:
 		self.info_df = None
@@ -24,15 +26,18 @@ class InfoLib:
 					self.info_df = pd.concat([self.info_df, info])
 				else:
 					self.info_df = info
+	
+	def report(self, prepare_data_func, header_type, show_desc = True, show_tags = True):
+		df = self.info_df.copy()	
+		dfv: pd.DataFrame = prepare_data_func(df)
 
-fq = r'D:\Code\git_repos\sunny-data\finance\investing\checklist.json'
-fa = r'D:\Code\git_repos\sunny-data\finance\investing\analysis\kpit.json'
-
-lib = InfoLib()
-lib.load(fq, 'checklist')
-
-lib.load(fa, 'KPITTECH.NS')
-
-print(lib.info_df)
-
-print('done')
+		for _, row in dfv.iterrows():
+			isHeading = '# ' if row[self.LBL_TYPE] == header_type else ''
+			print(isHeading + row[self.LBL_TITLE])
+			if show_tags:
+				try:
+					print('*' + ', '.join(row[self.LBL_TAG]) + '*')
+				except:
+					pass
+			if show_desc:
+				print(row[self.LBL_DESC])
