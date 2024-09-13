@@ -10,6 +10,8 @@ lib.load(fq, 'checklist')
 
 lib.load(fa, 'KPITTECH.NS')
 
+print(lib.info_df)
+
 # Filter and Sort
 def prepare_data_for_reporting(df: pd.DataFrame):
     col_type = 'type'
