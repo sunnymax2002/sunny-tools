@@ -16,6 +16,8 @@ class RelationshipType(str, Enum):
     CONNECTS_TO = "connects_to"
     INFERRED = "inferred"
     CONTRADICTS = "contradicts"  # New custom inference
+    MEMBER_OF = "member_of"
+    """Indicates a membership or belonging to a group or category"""
 
 # TODO: Add docstrings from er_types.yaml
 class EntityType(str, Enum):
@@ -253,8 +255,7 @@ class CriticalThinkingModel:
         Visualize the critical thinking model graph.
         If a specific graph is provided, visualize that instead of the main graph.
         """
-        if graph is not None:
-            disp_graph = graph
+        disp_graph = graph if graph is not None else self.graph
         pos = nx.spring_layout(disp_graph)
         labels = {node: f"{data.get('type')}: {data.get('label')}" for node, data in disp_graph.nodes(data=True)}
         edge_labels = {(u, v): f"{data.get('type')} ({data.get('confidence',1.0)})" for u, v, data in disp_graph.edges(data=True)}
