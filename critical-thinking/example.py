@@ -11,6 +11,8 @@ model.add_entity(Entity(id="C", type=EntityType.COUNTERARGUMENT, label="Counter 
 	Relationship(target_id="A", type=RelationshipType.CHALLENGES)
 ]))
 
+model.update_graph_from_yaml(r"C:\Users\sunny\git_repos\sunny-data\finance\investing\critical-thinking\checklist.yaml")
+
 # Inferences and export
 inferred = model.infer_new_links()
 print("Inferred edges:", inferred)

@@ -1,9 +1,11 @@
 # AI generated, then refined by sunnymax2002: https://chatgpt.com/share/683b706d-6f94-8008-9e7f-d259cbfbbca4
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 from typing import List, Optional
 from enum import Enum
 from datetime import datetime
 import networkx as nx
+import yaml
+import matplotlib.pyplot as plt
 
 class RelationshipType(str, Enum):
     SUPPORTS = "supports"
@@ -15,6 +17,7 @@ class RelationshipType(str, Enum):
     INFERRED = "inferred"
     CONTRADICTS = "contradicts"  # New custom inference
 
+# TODO: Add docstrings from er_types.yaml
 class EntityType(str, Enum):
     QUESTION = "Question"
     ANSWER = "Answer"
@@ -22,9 +25,17 @@ class EntityType(str, Enum):
     OPINION = "Opinion"
     CLAIM = "Claim"
     EVIDENCE = "Evidence"
+    """Information that supports or refutes a claim"""
     ASSUMPTION = "Assumption"
     COUNTERARGUMENT = "Counterargument"
     REFERENCE = "Reference"
+    SUBJECT = "Subject"
+    OBJECT = "Object"
+    ARGUMENT = "Argument"
+    DOMAIN = "Domain"
+    """A specific area of knowledge or expertise"""
+    PRINCIPLE = "Principle"
+    """A fundamental truth or proposition serving as the foundation for a system of belief or behavior"""
     TOPIC = "Topic"
     SUBTOPIC = "Subtopic"
     CONTEXT = "Context"
@@ -43,7 +54,7 @@ class EntityType(str, Enum):
     TEMPORAL_CONTEXT = "TemporalContext"
 
 class Metadata(BaseModel):
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.now) #TODO: (datetime.timezone.utc))
     updated_at: Optional[datetime] = None
     author: Optional[str] = None
     source: Optional[str] = None
@@ -85,6 +96,7 @@ class CriticalThinkingModel:
                 raise ValueError(f"Target entity {rel.target_id} for relationship does not exist.")
 
         # TODO: add history also
+        # TODO: assign a node color based on entity type
         self.graph.add_node(
             entity.id,
             label=entity.label,
@@ -102,6 +114,41 @@ class CriticalThinkingModel:
                 description=rel.description,
                 confidence=confidence
             )
+
+    def update_graph_from_yaml(self, yaml_path: str):
+        # Load YAML file and parse entities
+        with open(yaml_path, 'r') as file:
+            data = yaml.safe_load(file)
+            # yaml_str = file.read()
+        entities = TypeAdapter(List[Entity]).validate_python(data['entities'])
+        for entity in entities:
+            if entity.id in self.graph:
+                # Update existing entity
+                existing_data = self.graph.nodes[entity.id]
+                existing_data.update(
+                    label=entity.label,
+                    type=entity.type.value,
+                    content=entity.content,
+                    metadata=entity.metadata.model_dump() if entity.metadata else None,
+                    version=entity.version
+                )
+                self.graph.nodes[entity.id] = existing_data
+            else:
+                # Add new entity
+                self.add_entity(entity)
+        # Add relationships
+        for entity in entities:
+            for rel in entity.related_to or []:
+                if self.graph.has_node(rel.target_id):
+                    confidence = rel.confidence if rel.confidence is not None else 1.0
+                    if not self.graph.has_edge(entity.id, rel.target_id):
+                        self.graph.add_edge(
+                            entity.id,
+                            rel.target_id,
+                            type=rel.type.value,
+                            description=rel.description,
+                            confidence=confidence
+                        )
 
     def infer_new_links(self):
         inferred_edges = []
@@ -158,14 +205,62 @@ class CriticalThinkingModel:
         self.graph = nx.read_graphml(filename)
         print(f"Graph imported from {filename}")
 
-    def visualize(self):
-        import matplotlib.pyplot as plt
-        pos = nx.spring_layout(self.graph)
-        labels = {node: f"{data.get('type')}: {data.get('label')}" for node, data in self.graph.nodes(data=True)}
-        edge_labels = {(u, v): f"{data.get('type')} ({data.get('confidence',1.0)})" for u, v, data in self.graph.edges(data=True)}
+    def get_partial_graph(self, anchor_id, depth=1):
+        """
+        Get a subgraph starting from the anchor node up to a specified depth.
+        """
+        if anchor_id not in self.graph:
+            print(f"Anchor node '{anchor_id}' does not exist.")
+            return None
+        if depth < 1:
+            print("Depth must be at least 1.")
+            return None
+        
+        # Perform BFS to find nodes within the depth level
+        visited = set()
+        level = {anchor_id: 0}
+        queue = [anchor_id]
+
+        while queue:
+            current = queue.pop(0)
+            visited.add(current)
+            current_level = level[current]
+
+            if current_level < depth:
+                for neighbor in self.graph.successors(current):
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        queue.append(neighbor)
+                        level[neighbor] = current_level + 1
+        
+        # Create subgraph
+        subgraph = self.graph.subgraph(visited)
+
+        return subgraph
+        # # Visualization
+        # pos = nx.spring_layout(subgraph)
+        # labels = {node: f"{subgraph.nodes[node].get('type')} ({node})" for node in subgraph.nodes()}
+        # edge_labels = {(u, v): f"{d['type']}" for u, v, d in subgraph.edges(data=True)}
+        
+        # plt.figure(figsize=(8, 6))
+        # nx.draw(subgraph, pos, with_labels=True, labels=labels, node_color="lightgreen", node_size=1200, font_size=9)
+        # nx.draw_networkx_edge_labels(subgraph, pos, edge_labels=edge_labels, font_color='red')
+        # plt.title(f"Partial Graph from '{anchor_id}' up to depth {depth}")
+        # plt.show()
+
+    def visualize(self, graph: Optional[nx.DiGraph] = None):
+        """
+        Visualize the critical thinking model graph.
+        If a specific graph is provided, visualize that instead of the main graph.
+        """
+        if graph is not None:
+            disp_graph = graph
+        pos = nx.spring_layout(disp_graph)
+        labels = {node: f"{data.get('type')}: {data.get('label')}" for node, data in disp_graph.nodes(data=True)}
+        edge_labels = {(u, v): f"{data.get('type')} ({data.get('confidence',1.0)})" for u, v, data in disp_graph.edges(data=True)}
         plt.figure(figsize=(10, 8))
-        nx.draw(self.graph, pos, with_labels=True, labels=labels, node_color="lightblue", node_size=1500, font_size=10)
-        nx.draw_networkx_edge_labels(self.graph, pos, edge_labels=edge_labels, font_color='red')
+        nx.draw(disp_graph, pos, with_labels=True, labels=labels, node_color="lightblue", node_size=1500, font_size=10)
+        nx.draw_networkx_edge_labels(disp_graph, pos, edge_labels=edge_labels, font_color='red')
         plt.title("Critical Thinking Model")
         plt.show()
 
