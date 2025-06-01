@@ -78,6 +78,9 @@ class Entity(BaseModel):
     id: str
     type: EntityType
     label: str
+    # TODO: support different formats for content (e.g., text, markdown, HTML)
+    # content can be a string, or a more complex structure like a dict or list, e.g., for rich text or structured data
+    # for now, we keep it simple as a string
     content: Optional[str] = None
     metadata: Optional[Metadata] = None
     related_to: Optional[List[Relationship]] = []
