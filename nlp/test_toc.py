@@ -12,6 +12,18 @@ def extract_builtin_toc(doc):
 import fitz
 import re
 
+def check_text_in_page(doc, page_num, text):
+    # Validate: does this section title appear in the suggested page?
+    try:
+        page_text = doc.load_page(page_num - 1).get_text()
+    except Exception:
+        return None
+    normalized_title = re.sub(r'\s+', ' ', text).strip()
+    if normalized_title.lower() in page_text.lower():
+        key = (normalized_title.lower(), page_num)
+        return key
+    return None
+
 def extract_verified_toc(doc, max_pages_to_scan=10, max_toc_items=30, content_page_num=None):
     toc = []
     seen = set()
@@ -32,6 +44,7 @@ def extract_verified_toc(doc, max_pages_to_scan=10, max_toc_items=30, content_pa
     # Split around number boundaries (assumes numbers might be page numbers)
     parts = re.split(r'(\d{1,4})', full_text)
 
+    prev_part = None
     # Scan for pattern: [section_title, page_number]
     for i in range(len(parts) - 1):
         part = parts[i].strip()
@@ -39,23 +52,22 @@ def extract_verified_toc(doc, max_pages_to_scan=10, max_toc_items=30, content_pa
 
         # Current part = title candidate, next part = page number?
         if part and next_part.isdigit():
+            title = part.replace('\n', ' ').strip()
             page_num = int(next_part)
-            if 1 <= page_num <= doc.page_count:
-                # Validate: does this section title appear in the suggested page?
-                try:
-                    page_text = doc.load_page(page_num - 1).get_text()
-                except Exception:
-                    continue
-                normalized_title = re.sub(r'\s+', ' ', part).strip()
-                if normalized_title.lower() in page_text.lower():
-                    key = (normalized_title.lower(), page_num)
-                    if key not in seen:
-                        toc.append([1, normalized_title, page_num])
-                        seen.add(key)
+            
+        page_num = int(next_part)
+        if 1 <= page_num <= doc.page_count:
+            # Validate: does this section title appear in the suggested page?
+            key = check_text_in_page(doc, page_num, title)
+            if key is not None and key not in seen:
+                toc.append([1, key[0], page_num])
+                seen.add(key)
 
         # Limit to reasonable TOC size
         if len(toc) >= max_toc_items:
             break
+
+        prev_part = part
 
     return toc if toc else None
 

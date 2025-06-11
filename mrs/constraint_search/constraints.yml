@@ -1,0 +1,18 @@
+User:
+  count: 2
+  constraints:
+    name:
+      $fuzzy: ali
+      $weight: 2.0
+    age:
+      $gt: 20
+      $lt: 30
+      $weight: 1.0
+
+Product:
+  count: 1
+  constraints:
+    price:
+      $lte: 10.0
+    title:
+      $regex: "^Note.*"

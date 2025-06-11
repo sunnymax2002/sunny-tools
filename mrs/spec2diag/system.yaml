@@ -1,0 +1,100 @@
+layout:
+  direction: LR  # Left to Right
+
+blocks:
+  - id: sensor1
+    label: Temperature Sensor
+    shape: ellipse
+    style: filled
+    color: lightyellow
+
+  - id: sensor2
+    label: Pressure Sensor
+    shape: ellipse
+    style: filled
+    color: lightyellow
+
+  - id: signal_conditioner
+    label: Signal Conditioner
+    shape: box
+    style: filled
+    color: lightgray
+
+  - id: adc
+    label: ADC
+    shape: box
+    style: filled
+    color: lightblue
+
+  - id: controller
+    label: Microcontroller
+    shape: box
+    style: filled
+    color: lightgreen
+
+  - id: memory
+    label: Flash Memory
+    shape: cylinder
+    style: filled
+    color: lightpink
+
+  - id: actuator1
+    label: Motor Driver
+    shape: rect
+    style: filled
+    color: lightcyan
+
+  - id: actuator2
+    label: Valve Control
+    shape: rect
+    style: filled
+    color: lightcyan
+
+  - id: display
+    label: LCD Display
+    shape: rect
+    style: filled
+    color: orange
+
+  - id: comm
+    label: Communication Module
+    shape: box
+    style: filled
+    color: violet
+
+connections:
+  - from: sensor1
+    to: signal_conditioner
+    label: Analog Signal
+
+  - from: sensor2
+    to: signal_conditioner
+    label: Analog Signal
+
+  - from: signal_conditioner
+    to: adc
+    label: Conditioned Signal
+
+  - from: adc
+    to: controller
+    label: Digital Data
+
+  - from: controller
+    to: memory
+    label: Store Config
+
+  - from: controller
+    to: actuator1
+    label: Motor PWM
+
+  - from: controller
+    to: actuator2
+    label: Valve Signal
+
+  - from: controller
+    to: display
+    label: Status Output
+
+  - from: controller
+    to: comm
+    label: Data Tx/Rx
