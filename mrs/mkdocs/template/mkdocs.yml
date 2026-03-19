@@ -1,0 +1,38 @@
+site_name: My MkDocs Material Documentation
+site_url: https://sitename.example
+theme:
+  name: material
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra_javascript:
+  - javascript/images_dark.js
+
+plugins:
+  - search
+  - table-reader        # https://github.com/timvink/mkdocs-table-reader-plugin
+  # https://github.com/christo-ph/mkdocs_build_plantuml
+  - build_plantuml:
+        render: 'server' # or "local" for local rendering
+        bin_path: 'plantuml' # ignored when render: server, defaults to PATH lookup
+        server: 'http://www.plantuml.com/plantuml' # official plantuml server
+        disable_ssl_certificate_validation: true # for self-signed and invalid certs
+        output_format: 'svg' # or "png"
+        allow_multiple_roots: false # in case your codebase contains more locations for diagrams (all ending in diagram_root)
+        diagram_root: 'docs/uml' # should reside under docs_dir
+        output_folder: 'out'
+        input_folder: 'src'
+        input_extensions: '' # comma separated list of extensions to parse, by default every file is parsed
+        exclude_dirs: ['.git'] # directories to exclude when walking the diagram root
+        theme_enabled: true
+        theme_folder: "include/themes"
+        theme_light: "light.puml"
+        theme_dark: "dark.puml"        
+  - drawio-exporter     # https://pypi.org/project/mkdocs-drawio-exporter/#:~:text=Usage&text=The%20plugin%20will%20export%20the,than%20separate%20files%20per%20page.

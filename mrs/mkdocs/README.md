@@ -7,3 +7,5 @@ MmDocs based documentation system, which supports Machine Readable Spec (MRS)
 3. Tables (CSV, XLS): https://github.com/timvink/mkdocs-table-reader-plugin
 
 Compare with https://timvink.nl/blog/reproducible-reports-with-mkdocs/
+
+https://jameswillett.dev/getting-started-with-material-for-mkdocs/#introduction

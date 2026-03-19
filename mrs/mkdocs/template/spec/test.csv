@@ -1,0 +1,4 @@
+Title,Name,Description
+MkDocs Material,MkDocs Material Theme,A popular theme for MkDocs that provides a modern and responsive design for documentation websites.
+MkDocs Table Reader Plugin,MkDocs Table Reader Plugin,A plugin for MkDocs that allows you to read and display tables from CSV files in your documentation.
+MkDocs Drawio Exporter Plugin,MkDocs Drawio Exporter Plugin,A plugin for MkDocs that exports Draw.io diagrams to images and includes them in your documentation.
