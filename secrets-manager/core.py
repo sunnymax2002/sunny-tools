@@ -87,7 +87,18 @@ class DecryptedSecretPayload(BaseModel):
 # ==========================================
 
 class FamilySecretsManager:
-    def __init__(self, storage_dir: str = "./vault"):
+    def __init__(self, storage_dir: str = None):
+        if storage_dir is None:
+            # Attempt to load from config file
+            config_path = Path(__file__).parent / "config.yml"
+            if config_path.exists():
+                with open(config_path, "r") as f:
+                    import yaml
+                    config = yaml.safe_load(f)
+                    storage_dir = config.get("vault_path", "./family_vault")
+            else:
+                storage_dir = "./family_vault"
+
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(exist_ok=True)
 

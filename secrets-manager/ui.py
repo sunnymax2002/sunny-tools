@@ -5,6 +5,15 @@ import json
 # Assuming FamilySecretsManager, SecretModel, DecryptedSecretPayload are in the same scope
 from core import FamilySecretsManager, DecryptedSecretPayload
 
+def toggle_visibility(entry_widget, button_widget):
+    """Toggles an entry widget between masked (*) and plain text."""
+    if entry_widget.cget("show") == "*":
+        entry_widget.config(show="")
+        button_widget.config(text="🙈 Hide")
+    else:
+        entry_widget.config(show="*")
+        button_widget.config(text="👁️ Show")
+
 class DarkModeFamilyVaultUI:
     def __init__(self, root):
         self.root = root
@@ -17,7 +26,7 @@ class DarkModeFamilyVaultUI:
         self.root.configure(bg="#121212")
         
         # Initialize backend connection
-        self.manager = FamilySecretsManager("./family_vault")
+        self.manager = FamilySecretsManager(storage_dir=None)  # Use default from config or environment
         
         # --- STATE VARIABLES ---
         self.current_user = tk.StringVar()
@@ -120,13 +129,29 @@ class DarkModeFamilyVaultUI:
 
         ttk.Separator(left_panel, orient="horizontal").pack(fill="x", pady=15)
 
+        # --- MASTER KEY FIELD WITH TOGGLE ---
         ttk.Label(left_panel, text="Enter Master Key:").pack(anchor="w")
-        self.read_master_key = ttk.Entry(left_panel, show="*", font=("Arial", 11))
-        self.read_master_key.pack(fill="x", pady=5)
+        mk_frame = ttk.Frame(left_panel, style="Panel.TFrame")
+        mk_frame.pack(fill="x", pady=5)
 
+        self.read_master_key = ttk.Entry(mk_frame, show="*", font=("Arial", 11))
+        self.read_master_key.pack(side="left", fill="x", expand=True)
+        
+        mk_btn = ttk.Button(mk_frame, text="👁️ Show", width=8)
+        mk_btn.config(command=lambda: toggle_visibility(self.read_master_key, mk_btn))
+        mk_btn.pack(side="right", padx=(5, 0))
+
+        # --- HINT VALUE FIELD WITH TOGGLE ---
         ttk.Label(left_panel, text="Enter Hint Verification Value:").pack(anchor="w")
-        self.read_hint_value = ttk.Entry(left_panel, show="*", font=("Arial", 11))
-        self.read_hint_value.pack(fill="x", pady=5)
+        hv_frame = ttk.Frame(left_panel, style="Panel.TFrame")
+        hv_frame.pack(fill="x", pady=5)
+        
+        self.read_hint_value = ttk.Entry(hv_frame, show="*", font=("Arial", 11))
+        self.read_hint_value.pack(side="left", fill="x", expand=True)
+        
+        hv_btn = ttk.Button(hv_frame, text="👁️ Show", width=8)
+        hv_btn.config(command=lambda: toggle_visibility(self.read_hint_value, hv_btn))
+        hv_btn.pack(side="right", padx=(5, 0))
 
         decrypt_btn = ttk.Button(left_panel, text="🔓 Decrypt & Read", style="Primary.TButton", command=self._decrypt_record)
         decrypt_btn.pack(fill="x", pady=20)
@@ -158,14 +183,31 @@ class DarkModeFamilyVaultUI:
         self.form_hint_desc = ttk.Entry(right_panel, font=("Arial", 11))
         self.form_hint_desc.pack(fill="x", pady=3)
 
+        # --- FORM HINT VALUE WITH TOGGLE ---
         ttk.Label(right_panel, text="Secret Hint Answer (Used to encrypt data):").pack(anchor="w")
-        self.form_hint_val = ttk.Entry(right_panel, show="*", font=("Arial", 11))
-        self.form_hint_val.pack(fill="x", pady=3)
+        f_hv_frame = ttk.Frame(right_panel, style="Panel.TFrame")
+        f_hv_frame.pack(fill="x", pady=3)
+        
+        self.form_hint_val = ttk.Entry(f_hv_frame, show="*", font=("Arial", 11))
+        self.form_hint_val.pack(side="left", fill="x", expand=True)
+        
+        f_hv_btn = ttk.Button(f_hv_frame, text="👁️ Show", width=8)
+        f_hv_btn.config(command=lambda: toggle_visibility(self.form_hint_val, f_hv_btn))
+        f_hv_btn.pack(side="right", padx=(5, 0))
 
+        # --- FORM MASTER KEY WITH TOGGLE ---
         ttk.Label(right_panel, text="Master Encryption Key:").pack(anchor="w")
-        self.form_master_key = ttk.Entry(right_panel, show="*", font=("Arial", 11))
-        self.form_master_key.pack(fill="x", pady=3)
+        f_mk_frame = ttk.Frame(right_panel, style="Panel.TFrame")
+        f_mk_frame.pack(fill="x", pady=3)
+        
+        self.form_master_key = ttk.Entry(f_mk_frame, show="*", font=("Arial", 11))
+        self.form_master_key.pack(side="left", fill="x", expand=True)
+        
+        f_mk_btn = ttk.Button(f_mk_frame, text="👁️ Show", width=8)
+        f_mk_btn.config(command=lambda: toggle_visibility(self.form_master_key, f_mk_btn))
+        f_mk_btn.pack(side="right", padx=(5, 0))
 
+        # ... (Keep the Save and Delete buttons frame at the bottom the same) ...
         btn_frame = ttk.Frame(right_panel, style="Panel.TFrame")
         btn_frame.pack(fill="x", pady=15)
 
