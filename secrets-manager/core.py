@@ -227,3 +227,17 @@ class FamilySecretsManager:
             if plain_json_str:
                 burn_string(plain_json_str)
                 del plain_json_str
+    
+    def delete_secret(self, user: str, service_name: str) -> bool:
+        """Calculates the target obfuscated file and removes it if it exists."""
+        mock_envelope = SecretModel(
+            service_name=service_name,
+            user=user,
+            encrypted_data=EncryptedContainer(ciphertext="", iv="", salt="", hint_description="")
+        )
+        file_path = self.storage_dir / mock_envelope.secure_filename
+        if file_path.exists():
+            file_path.unlink()  # Deletes the file
+            print(f"[Deleted] Removed isolated asset: {mock_envelope.secure_filename}")
+            return True
+        return False
